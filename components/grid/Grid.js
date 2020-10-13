@@ -1,12 +1,28 @@
-import React, {useEffect, useContext} from 'react';
+import React, {useEffect, useContext, useCallback} from 'react';
 import {GridContext} from '../../hooks/GridContext';
 import styles from '../../styles/Grid.module.scss';
 import Cell from './Cell';
 
-
+const deepCopy = (arr) => {
+    let copy = [];
+    arr.forEach(elem => {
+      if(Array.isArray(elem)){
+        copy.push(deepCopy(elem))
+      }else{
+        if (typeof elem === 'object') {
+          copy.push(deepCopyObject(elem))
+      } else {
+          copy.push(elem)
+        }
+      }
+    })
+    return copy;
+}
 
 export default function Grid() {
-    const { gridData, setGridData, dimensions, setDimensions} = useContext(GridContext);
+    const { gridData, setGridData, 
+            dimensions, setDimensions,
+            Running, setRunning } = useContext(GridContext);
     
     let handleCellClick = (x, y) => {
         let copyGridData = [...gridData];
@@ -24,25 +40,20 @@ export default function Grid() {
         }
         return (allCells);
     }
-    const deepCopy = (arr) => {
-        let copy = [];
-        arr.forEach(elem => {
-          if(Array.isArray(elem)){
-            copy.push(deepCopy(elem))
-          }else{
-            if (typeof elem === 'object') {
-              copy.push(deepCopyObject(elem))
-          } else {
-              copy.push(elem)
-            }
-          }
-        })
-        return copy;
-      }
-    let nextGen = () => {
+    useEffect(() => {
+        startAnimation();
+    }, [Running])
+
+    let startAnimation = () => {
+        if(!Running)
+            return;
         
-        console.log("dfafda", gridData);
-        console.log("Type", Array.isArray(gridData));
+        setTimeout(() => {
+            nextGen();
+        }, 1000);
+    }
+    
+    let nextGen = () => {
         let oldGen = deepCopy(gridData); // We have to deep copy since its a 2d array!
         let newGen = deepCopy(gridData);
         for(let i = 0; i < dimensions.x; i++) {
@@ -69,13 +80,11 @@ export default function Grid() {
         let alive = 0;
         for(let i = -1; i <= 1; i++){
             for(let j = -1; j <= 1; j++){
-                
                 if( x + i < dimensions.x && x + i >= 0
                     &&
                     y + j < dimensions.y && y + j >= 0){
                         grid[x + i][y + j] == 1 ? alive++ : alive ;
                 }
-                
             }
         }
         // If self is alive then delete one becuase we counted ourselves
@@ -83,11 +92,13 @@ export default function Grid() {
             alive--;
         return alive;
     }
+    startAnimation(); // Call this on every render
     return (
         <>
             <button onClick={()=>{
-                nextGen();
-                }}> test</button>
+                setRunning(!Running);
+                
+            }}> {Running ? 'Stop' : 'Start'}</button>
             <div className={styles['life-grid']}
                 style={
                     {

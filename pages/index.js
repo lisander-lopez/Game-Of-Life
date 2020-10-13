@@ -7,6 +7,7 @@ import {GridProvider} from '../hooks/GridContext';
 
 export default function Home() {
   const [GridDimensions, setGridDimensions] = useState({x: 20, y: 20})
+
   const handleChange = (e,dimension) =>{
     e.persist();
     e.preventDefault();
